@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Híbrido 4W">
+<meta name="theme-color" content="#000000">
+<title>⚡ Híbrido 4 Semanas</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif;background:#000;color:#fff;max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;}
+  button{font-family:inherit;cursor:pointer;}
+  ::-webkit-scrollbar{display:none;}
+
+  /* Layout */
+  #app{display:flex;flex-direction:column;height:100dvh;}
+  #statusbar{padding:env(safe-area-inset-top,14px) 20px 4px;background:#000;display:flex;justify-content:space-between;font-size:13px;font-weight:600;flex-shrink:0;}
+  #header{padding:4px 20px 0;background:#000;flex-shrink:0;}
+  #content{flex:1;overflow-y:auto;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 80px);}
+  #tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(0,0,0,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #1C1C1E;padding:8px 0 calc(env(safe-area-inset-bottom,16px) + 8px);display:flex;justify-content:space-around;z-index:100;}
+
+  /* Tab bar buttons */
+  .tab-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 16px;}
+  .tab-btn .tab-emoji{font-size:22px;}
+  .tab-btn .tab-label{font-size:10px;font-weight:600;}
+
+  /* Cards */
+  .card{background:#1C1C1E;border-radius:16px;padding:14px 16px;margin-bottom:10px;}
+  .card-left{border-left:4px solid;}
+
+  /* Week selector */
+  .week-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 16px;}
+  .week-btn{padding:14px;border-radius:16px;border:2px solid #1C1C1E;background:#1C1C1E;text-align:left;transition:all .2s;}
+  .week-btn.active{border-color:var(--c)!important;background:color-mix(in srgb,var(--c) 15%,transparent)!important;}
+  .week-label{font-size:10px;color:#8E8E93;margin-bottom:2px;}
+  .week-name{font-size:15px;font-weight:700;}
+
+  /* Day list */
+  .day-list{display:flex;flex-direction:column;gap:10px;padding:0 16px;}
+  .day-btn{background:#1C1C1E;border-radius:16px;padding:14px 16px;border:none;display:flex;align-items:center;gap:14px;width:100%;text-align:left;}
+  .day-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .day-chevron{color:#3A3A3C;font-size:18px;margin-left:auto;}
+
+  /* Tags */
+  .tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+
+  /* Detail */
+  .ex-card{background:#000;border-radius:14px;padding:12px 14px;margin-bottom:8px;border-left:3px solid;}
+  .ex-row{display:flex;justify-content:space-between;align-items:center;}
+  .ex-note{font-size:12px;color:#8E8E93;margin-top:3px;}
+  .tip-card{background:#1C1C1E;border-radius:14px;padding:12px 14px;margin:12px 16px;border-left:3px solid #FF9500;}
+
+  /* Circadiano grid */
+  .cron-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px 16px;}
+  .cron-cell{background:#1C1C1E;border-radius:14px;padding:12px 14px;}
+
+  /* Nutrición */
+  .nut-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+
+  /* Back btn */
+  .back-btn{background:none;border:none;color:#007AFF;font-size:17px;padding:0 16px 12px;display:flex;align-items:center;gap:4px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="statusbar">
+    <span id="clock">9:41</span>
+    <span>●●● 📶 🔋</span>
+  </div>
+  <div id="header">
+    <div id="header-inner" style="padding-bottom:8px;">
+      <h1 style="font-size:28px;font-weight:800;letter-spacing:-0.5px;">⚡ Híbrido 4W</h1>
+      <p style="font-size:13px;color:#8E8E93;margin-top:2px;">Fuerza · HIIT · LISS · Movilidad</p>
+    </div>
+  </div>
+  <div id="content"></div>
+  <div id="tabbar">
+    <button class="tab-btn" onclick="switchTab('programa')">
+      <span class="tab-emoji">📋</span>
+      <span class="tab-label" id="tl-programa" style="color:#007AFF">Programa</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('circadiano')">
+      <span class="tab-emoji">🕐</span>
+      <span class="tab-label" id="tl-circadiano" style="color:#8E8E93">Circadiano</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('nutricion')">
+      <span class="tab-emoji">🥗</span>
+      <span class="tab-label" id="tl-nutricion" style="color:#8E8E93">Nutrición</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────
+const SEMANAS = [
+  {id:1,label:"Base",color:"#34C759"},
+  {id:2,label:"Progresión",color:"#007AFF"},
+  {id:3,label:"Pico",color:"#FF9500"},
+  {id:4,label:"Descarga",color:"#FF3B30"}
+];
+
+const PROGRAMA = {
+1:{sub:"Construye la base aeróbica y aprende patrones de movimiento",dias:[
+  {dia:"Lun",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Tren Inferior",dur:"50 min",exs:[{n:"Sentadilla con barra",s:"4×8",nota:"Control excéntrico 3s"},{n:"Peso muerto rumano",s:"3×10",nota:"Bisagra de cadera"},{n:"Zancadas con mancuernas",s:"3×12 c/pierna",nota:"Paso largo, torso erguido"},{n:"Hip thrust con barra",s:"4×12",nota:"Pausa 1s arriba"},{n:"Peso muerto a 1 pierna",s:"3×8 c/pierna",nota:"Mancuerna ligera"}],tip:"5 min de estiramientos dinámicos de cadera al finalizar"},
+  {dia:"Mar",tipo:"LISS",emoji:"🚶",color:"#34C759",nombre:"Cardio Suave",dur:"40 min",exs:[{n:"Calentamiento caminata",s:"5 min",nota:""},{n:"Trote suave",s:"30–35 min",nota:"FC 60–70% · ~120–130 bpm"},{n:"Enfriamiento",s:"5 min",nota:"Respiración diafragmática"}],tip:"Mantén una conversación cómoda durante todo el trote"},
+  {dia:"Mié",tipo:"MOVILIDAD",emoji:"🧘",color:"#FF9500",nombre:"Recuperación Activa",dur:"40 min",exs:[{n:"Círculos de cadera",s:"3×12",nota:"Lento y controlado"},{n:"90/90 hip stretch",s:"2×60s c/lado",nota:"Respiración profunda"},{n:"Aperturas torácicas",s:"3×10",nota:"Foam roller"},{n:"Rotaciones de hombro",s:"3×10",nota:"Mancuerna ligera"},{n:"Cat-Cow + Child's Pose",s:"3×8",nota:"Sincroniza con respiración"},{n:"Estiramiento de psoas",s:"2×60s c/lado",nota:"Mantén pelvis neutral"}],tip:"5 min respiración 4-7-8 para activar el sistema parasimpático"},
+  {dia:"Jue",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Tren Superior",dur:"50 min",exs:[{n:"Press de banca con barra",s:"4×8",nota:"Retracción escapular"},{n:"Remo con mancuerna",s:"4×10 c/lado",nota:"Codo pegado al cuerpo"},{n:"Press militar con mancuernas",s:"3×10",nota:"Core activado"},{n:"Face pull con pesa rusa",s:"3×15",nota:""},{n:"Curl de bíceps con barra",s:"3×12",nota:"Sin balanceo"},{n:"Extensión de tríceps",s:"3×12",nota:"Codo fijo"}],tip:"Estiramientos de pecho y hombros 5 min"},
+  {dia:"Vie",tipo:"HIIT",emoji:"⚡",color:"#FF3B30",nombre:"Circuito Metabólico",dur:"30 min",exs:[{n:"Calentamiento",s:"5 min",nota:"Movilidad articular"},{n:"Swing con pesa rusa",s:"40s / 20s",nota:"Explosivo"},{n:"Burpees",s:"30s / 30s",nota:"Modificados si es necesario"},{n:"Goblet squat",s:"40s / 20s",nota:"Profundo y rápido"},{n:"Mountain climbers",s:"40s / 20s",nota:"Core rígido"},{n:"Press + zancada",s:"30s c/lado",nota:"Movimiento compuesto"}],tip:"4 rondas completas · 5 min enfriamiento activo"},
+  {dia:"Sáb",tipo:"LISS",emoji:"🌿",color:"#34C759",nombre:"LISS + Movilidad",dur:"35 min",exs:[{n:"Caminata activa",s:"25–30 min",nota:"Al aire libre"},{n:"Estiramiento global",s:"10 min",nota:"Isquios, cuádriceps, pecho"}],tip:"Día de carga mental baja — sin presión de rendimiento"},
+  {dia:"Dom",tipo:"DESCANSO",emoji:"😴",color:"#8E8E93",nombre:"Descanso Total",dur:"Libre",exs:[{n:"Caminata lenta opcional",s:"15–20 min",nota:"Sin objetivo"},{n:"Meditación / Respiración",s:"10 min",nota:"Box breathing"}],tip:"Prioriza el sueño y la nutrición para la semana 2"}
+]},
+2:{sub:"Aumenta volumen y cargas. Introducción de supersets",dias:[
+  {dia:"Lun",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Inf. + Core",dur:"55 min",exs:[{n:"Sentadilla barra (↑5%)",s:"5×5",nota:"Explosividad"},{n:"SUPERSET: Peso muerto + Hip thrust",s:"4×8+10",nota:"Sin descanso entre"},{n:"Zancadas búlgaras",s:"3×10 c/pierna",nota:"Pie trasero elevado"},{n:"Plancha con remo",s:"3×8 c/lado",nota:"Core + tracción"},{n:"Dead bug",s:"3×10",nota:"Lumbar pegada al suelo"}],tip:"Proteína + batido inmediatamente post-entreno"},
+  {dia:"Mar",tipo:"LISS",emoji:"🚶",color:"#34C759",nombre:"Fartlek Suave",dur:"40 min",exs:[{n:"Trote base",s:"10 min",nota:"FC 60–65%"},{n:"Fartlek: acelera 1 min/5",s:"25 min",nota:"Sin esfuerzo máximo"},{n:"Enfriamiento",s:"5 min",nota:"Respiración nasal"}],tip:"Respiración nasal mejora la eficiencia aeróbica"},
+  {dia:"Mié",tipo:"MOVILIDAD",emoji:"🧘",color:"#FF9500",nombre:"Columna y Hombros",dur:"40 min",exs:[{n:"Rotación torácica",s:"3×12 c/lado",nota:""},{n:"Dislocaciones de hombro",s:"3×10",nota:"Agarre ancho, lento"},{n:"Estiramiento piriforme",s:"2×90s c/lado",nota:""},{n:"Movilidad de tobillo",s:"3×15",nota:"Descalzo"},{n:"Jefferson curl",s:"3×6",nota:"Segmentado, ligero"}],tip:"Yoga nidra 10 min para recuperación del SNC"},
+  {dia:"Jue",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Sup. + Estabilidad",dur:"55 min",exs:[{n:"Press banca (↑5%)",s:"5×5",nota:""},{n:"SUPERSET: Remo + Face pull",s:"4×10+15",nota:""},{n:"Arnold press",s:"3×10",nota:"Rotación completa"},{n:"SUPERSET: Curl + Tríceps",s:"3×12+12",nota:""},{n:"Farmer's walk",s:"3×40m",nota:"Core rígido"}],tip:"Estirar serrato anterior y bíceps 5 min"},
+  {dia:"Vie",tipo:"HIIT",emoji:"⚡",color:"#FF3B30",nombre:"Tabata + Fuerza",dur:"35 min",exs:[{n:"TABATA 1: Swings KB",s:"8×20s/10s",nota:"Máxima potencia"},{n:"Descanso",s:"90s",nota:""},{n:"TABATA 2: Squat jumps",s:"8×20s/10s",nota:"Aterriza suave"},{n:"Descanso",s:"90s",nota:""},{n:"TABATA 3: Push-up explosivo",s:"8×20s/10s",nota:""}],tip:"RPE debe llegar a 8–9/10 en los últimos rounds"},
+  {dia:"Sáb",tipo:"LISS",emoji:"🌿",color:"#34C759",nombre:"Zona 2 Extendida",dur:"50 min",exs:[{n:"Trote / bicicleta suave",s:"45 min",nota:"FC 65–70%"},{n:"Estiramientos globales",s:"10 min",nota:""}],tip:"Zona 2 es el pilar de la longevidad metabólica"},
+  {dia:"Dom",tipo:"DESCANSO",emoji:"😴",color:"#8E8E93",nombre:"Nutrición Estratégica",dur:"Libre",exs:[{n:"Caminata + sol matutino",s:"20 min",nota:""},{n:"Meal prep semana 3",s:"Preparación",nota:""}],tip:"Evalúa energía, sueño y fuerza de la semana pasada"}
+]},
+3:{sub:"Mayor volumen, cargas máximas y HIIT avanzado",dias:[
+  {dia:"Lun",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Fuerza Máxima Inf.",dur:"60 min",exs:[{n:"Sentadilla (↑10% vs S1)",s:"5×3",nota:"Técnica perfecta"},{n:"Peso muerto conv. con barra",s:"4×5",nota:"Peso desafiante"},{n:"Zancadas búlgaras cargadas",s:"4×8 c/pierna",nota:"Mancuernas pesadas"},{n:"Hip thrust con pausa",s:"4×10",nota:"3s de pausa arriba"},{n:"KB Clean",s:"4×6 c/lado",nota:"Técnica limpia"}],tip:"Proteína + carbos dentro de 30 min post-entreno"},
+  {dia:"Mar",tipo:"HIIT",emoji:"⚡",color:"#FF3B30",nombre:"EMOM de Potencia",dur:"30 min",exs:[{n:"EMOM 20 min · 4 ciclos:",s:"",nota:""},{n:"Min 1: 10 Swings KB pesado",s:"",nota:""},{n:"Min 2: 6 Clean & Press KB",s:"",nota:""},{n:"Min 3: 8 Goblet squats",s:"",nota:""},{n:"Min 4: 30s Plank hold",s:"",nota:""},{n:"Min 5: Descanso activo",s:"",nota:""}],tip:"FC puede llegar a 85–90% en los últimos ciclos"},
+  {dia:"Mié",tipo:"MOVILIDAD",emoji:"🧘",color:"#FF9500",nombre:"Recuperación SNC",dur:"45 min",exs:[{n:"Hip flow completo",s:"10 min",nota:"Fluido, sin pausas"},{n:"Wave motion columna",s:"3×8",nota:""},{n:"Stretch PNF isquiotibiales",s:"3×45s c/lado",nota:"Tensar–soltar"},{n:"Rotación int./ext. cadera",s:"3×12 c/lado",nota:""},{n:"Apertura pecho + escápulas",s:"3×10",nota:""}],tip:"Clave para reducir DOMS y prevenir lesiones"},
+  {dia:"Jue",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Fuerza Máxima Sup.",dur:"60 min",exs:[{n:"Press banca (↑10% vs S1)",s:"5×3",nota:""},{n:"Remo con barra pesado",s:"4×6",nota:""},{n:"Press militar barra",s:"4×6",nota:"Sin impulso de piernas"},{n:"SUPERSET: Remo + Face pull",s:"4×8+12",nota:""},{n:"Farmer's walk pesado",s:"4×30m",nota:"Peso máximo controlable"}],tip:"No hacer cardio hasta 6h después de esta sesión"},
+  {dia:"Vie",tipo:"HIIT",emoji:"⚡",color:"#FF3B30",nombre:"Circuito Alta Densidad",dur:"40 min",exs:[{n:"4 rondas · 45s trabajo / 15s desc.",s:"",nota:""},{n:"KB Swing doble",s:"",nota:""},{n:"Squat jump c/mancuernas",s:"",nota:""},{n:"Remo explosivo",s:"",nota:""},{n:"Mountain climbers cruzados",s:"",nota:""},{n:"Thruster KB",s:"",nota:""}],tip:"Semana de mayor demanda — el sueño es imprescindible"},
+  {dia:"Sáb",tipo:"LISS",emoji:"🌿",color:"#34C759",nombre:"LISS Zona 1",dur:"40 min",exs:[{n:"Caminata muy suave",s:"40 min",nota:"FC <110 bpm"},{n:"Contraste frío/caliente",s:"3 rondas",nota:"1 min frío / 2 min caliente"}],tip:"El objetivo hoy es solo recuperarte para la semana 4"},
+  {dia:"Dom",tipo:"DESCANSO",emoji:"😴",color:"#8E8E93",nombre:"Evaluación + Descanso",dur:"Libre",exs:[{n:"Evalúa fuerza vs semana 1",s:"",nota:""},{n:"Auto-masaje foam roller",s:"15 min",nota:""}],tip:"Reduce carbos refinados — prioriza sueño >8h"}
+]},
+4:{sub:"Reduce volumen 40%, mantén intensidad. El cuerpo se adapta",dias:[
+  {dia:"Lun",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Lower Descargado",dur:"40 min",exs:[{n:"Sentadilla barra",s:"3×5",nota:"Mismo peso S3"},{n:"Peso muerto",s:"3×5",nota:""},{n:"Zancadas",s:"2×10 c/pierna",nota:""},{n:"Hip thrust",s:"2×10",nota:""}],tip:"La descarga es una herramienta de adaptación, no dejar de entrenar"},
+  {dia:"Mar",tipo:"LISS",emoji:"🚶",color:"#34C759",nombre:"Zona 2 Suave",dur:"35 min",exs:[{n:"Trote suave respiración nasal",s:"35 min",nota:"FC 60–65%"}],tip:"Baja la carga mental también esta semana"},
+  {dia:"Mié",tipo:"MOVILIDAD",emoji:"🧘",color:"#FF9500",nombre:"Yoga Restaurativo",dur:"40 min",exs:[{n:"Secuencia restaurativa",s:"30 min",nota:"Posturas 2–3 min"},{n:"Respiración 4-7-8",s:"10 min",nota:"Activa nervio vago"}],tip:"La sesión más importante de toda la semana 4"},
+  {dia:"Jue",tipo:"FUERZA",emoji:"💪",color:"#007AFF",nombre:"Upper Descargado",dur:"40 min",exs:[{n:"Press banca",s:"3×5",nota:"Mismo peso S3"},{n:"Remo mancuerna",s:"3×8 c/lado",nota:""},{n:"Press militar",s:"2×8",nota:""},{n:"SUPERSET: Curl + Tríceps",s:"2×12",nota:""}],tip:"Mide tu 1RM estimado comparado con semana 1"},
+  {dia:"Vie",tipo:"HIIT",emoji:"⚡",color:"#FF3B30",nombre:"Test de Capacidad",dur:"25 min",exs:[{n:"AMRAP · 3 rondas × 5 min:",s:"",nota:""},{n:"10 Swings + 5 Burpees + 8 Squat jumps",s:"",nota:"Anota cuántas rondas completas"},{n:"1 min descanso entre rondas",s:"",nota:""}],tip:"Compara con semana 1 — verás la progresión 📈"},
+  {dia:"Sáb",tipo:"LISS",emoji:"🎉",color:"#34C759",nombre:"Caminata Libre",dur:"30 min",exs:[{n:"Caminata libre",s:"30 min",nota:"Sin reloj, sin ritmo — disfruta"}],tip:"¡Completaste 4 semanas de entrenamiento híbrido! 🎉"},
+  {dia:"Dom",tipo:"DESCANSO",emoji:"😴",color:"#8E8E93",nombre:"Planifica Ciclo 2",dur:"Libre",exs:[{n:"Compara fotos / medidas",s:"",nota:""},{n:"Planifica el bloque siguiente",s:"",nota:"↑ cargas 5–10%"}],tip:"El descanso de S4 es donde se consolidan los resultados"}
+]}};
+
+const CIRCADIANO = {
+  mañana:{label:"☀️ Matutino",despertar:"6:00–6:30",pico1:"7:00–10:00",liss:"6:30–7:30",hiit:"8:00–10:00",fuerza:"16:00–18:30",movilidad:"7:00 · 21:00",pico2:"16:00–18:00",dormir:"22:00–23:00"},
+  noche:{label:"🌙 Vespertino",despertar:"8:00–9:00",pico1:"11:00–13:00",liss:"11:00–12:00",hiit:"18:00–20:00",fuerza:"18:00–21:00",movilidad:"12:00 · 22:00",pico2:"18:00–21:00",dormir:"00:00–01:00"}
+};
+
+const NUTRICION = [
+  {t:"🍳 Pre-Entreno",sub:"60–90 min antes",c:"#FF9500",items:["Carbos medios: avena, arroz, plátano","Proteína moderada: huevos, yogur griego","Evita grasas altas (ralentizan digestión)","Cafeína: 3–6 mg/kg, 30–45 min antes"]},
+  {t:"💊 Durante el Entreno",sub:">60 min de actividad",c:"#007AFF",items:["Agua + electrolitos (sodio, potasio, magnesio)","Si >75 min: 20–30g carbos simples","Plátano, dátiles o bebida isotónica"]},
+  {t:"🥩 Post-Entreno",sub:"Dentro de 30–60 min",c:"#34C759",items:["30–40g proteína: whey, pollo, atún, huevos","Carbos para reponer glucógeno: arroz, fruta","Ratio ideal post-HIIT: 3:1 (carbs:proteína)","Post-movilidad/LISS: proteína sola basta"]},
+  {t:"🌙 Cena",sub:"2h antes de dormir",c:"#8E8E93",items:["Proteína lenta: requesón, queso cottage","Carbos bajos (salvo que entrenes de noche)","Magnesio 300mg mejora calidad del sueño","Evita alcohol — destruye síntesis proteica"]},
+  {t:"📊 Macros Diarios",sub:"Para recomposición corporal",c:"#AF52DE",items:["Proteína: 1.8–2.2 g / kg de peso","Carbohidratos: 3–5 g / kg (días intensos)","Grasas: 0.8–1.2 g / kg (omega-3 prioritario)","Calorías: mantenimiento ±200 kcal"]},
+  {t:"💧 Hidratación",sub:"Todo el día",c:"#06B6D4",items:["Base: 35 ml / kg de peso corporal / día","Extra por entreno: +500–700 ml por hora","Orina amarillo pálido = hidratación correcta","Pre-entreno: 500 ml en las 2h previas"]}
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────
+let state = { tab:"programa", semana:1, dia:null, cronotipo:"mañana" };
+
+// ─── UTILS ────────────────────────────────────────────────────────────
+function tag(tipo, color) {
+  return `<span class="tag" style="background:${color}22;color:${color};border:1px solid ${color}44;">${tipo}</span>`;
+}
+
+// ─── RENDERS ──────────────────────────────────────────────────────────
+function renderHeader() {
+  const h = document.getElementById('header-inner');
+  if (state.tab === 'programa' && state.dia !== null) {
+    h.innerHTML = `<button class="back-btn" onclick="goBack()">‹ Semana ${state.semana}</button>`;
+  } else {
+    h.innerHTML = `<h1 style="font-size:28px;font-weight:800;letter-spacing:-0.5px;">⚡ Híbrido 4W</h1><p style="font-size:13px;color:#8E8E93;margin-top:2px;">Fuerza · HIIT · LISS · Movilidad</p>`;
+  }
+}
+
+function renderTabBar() {
+  ['programa','circadiano','nutricion'].forEach(t => {
+    document.getElementById('tl-' + t).style.color = state.tab === t ? '#007AFF' : '#8E8E93';
+  });
+}
+
+function renderPrograma() {
+  const sem = PROGRAMA[state.semana];
+  if (state.dia !== null) {
+    renderDia(sem.dias[state.dia]);
+    return;
+  }
+  const semColor = SEMANAS[state.semana-1].color;
+  let html = `<div class="week-grid">`;
+  SEMANAS.forEach(s => {
+    const active = state.semana === s.id ? 'active' : '';
+    html += `<button class="week-btn ${active}" style="--c:${s.color}" onclick="selectSemana(${s.id})">
+      <div class="week-label">Semana ${s.id}</div>
+      <div class="week-name" style="color:${state.semana===s.id?s.color:'#fff'}">${s.label}</div>
+    </button>`;
+  });
+  html += `</div>
+  <div style="margin:0 16px 16px;">
+    <div class="card card-left" style="border-color:${semColor}">
+      <div style="font-size:12px;color:#8E8E93">${sem.sub}</div>
+    </div>
+  </div>
+  <div class="day-list">`;
+  sem.dias.forEach((d, i) => {
+    html += `<button class="day-btn" onclick="selectDia(${i})">
+      <div class="day-icon" style="background:${d.color}22">${d.emoji}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:15px;font-weight:600">${d.dia} — ${d.nombre}</span>
+          ${tag(d.tipo, d.color)}
+        </div>
+        <div style="font-size:12px;color:#8E8E93">⏱ ${d.dur} · ${d.exs.filter(e=>e.s).length} ejercicios</div>
+      </div>
+      <span class="day-chevron">›</span>
+    </button>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderDia(d) {
+  let html = `<div style="padding:0 16px;">
+    <div class="card" style="margin:12px 0 16px;border:1px solid ${d.color}44">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:56px;height:56px;border-radius:16px;background:${d.color}22;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${d.emoji}</div>
+        <div>
+          <div style="font-size:18px;font-weight:700">${d.nombre}</div>
+          <div style="display:flex;gap:8px;margin-top:4px;align-items:center">
+            ${tag(d.tipo, d.color)}
+            <span style="font-size:12px;color:#8E8E93">⏱ ${d.dur}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  d.exs.forEach(ex => {
+    if (!ex.n) return;
+    html += `<div class="ex-card" style="border-color:${d.color}">
+      <div class="ex-row">
+        <span style="font-size:14px;font-weight:600">${ex.n}</span>
+        ${ex.s ? `<span style="font-size:13px;color:${d.color};font-weight:700">${ex.s}</span>` : ''}
+      </div>
+      ${ex.nota ? `<div class="ex-note">💡 ${ex.nota}</div>` : ''}
+    </div>`;
+  });
+  if (d.tip) {
+    html += `<div class="tip-card">
+      <div style="font-size:12px;color:#FF9500;font-weight:600">⭐ Tip del día</div>
+      <div style="font-size:13px;color:#E5E5EA;margin-top:4px">${d.tip}</div>
+    </div>`;
+  }
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderCircadiano() {
+  const ct = CIRCADIANO[state.cronotipo];
+  let html = `<div style="padding:0 16px;">
+    <div style="display:flex;gap:8px;margin:12px 0 16px">`;
+  ['mañana','noche'].forEach(c => {
+    const active = state.cronotipo === c;
+    html += `<button onclick="selectCronotipo('${c}')" style="flex:1;padding:12px;border-radius:14px;border:none;background:${active?'#007AFF':'#1C1C1E'};color:${active?'#fff':'#8E8E93'};font-size:15px;font-weight:700;cursor:pointer">${CIRCADIANO[c].label}</button>`;
+  });
+  html += `</div><div class="cron-grid">`;
+  const items = [
+    {l:"Despertar",v:ct.despertar,e:"⏰",c:"#fff"},
+    {l:"Pico hormonal 1",v:ct.pico1,e:"🚀",c:"#34C759"},
+    {l:"LISS ideal",v:ct.liss,e:"🚶",c:"#34C759"},
+    {l:"HIIT ideal",v:ct.hiit,e:"⚡",c:"#FF3B30"},
+    {l:"Fuerza ideal",v:ct.fuerza,e:"💪",c:"#007AFF"},
+    {l:"Movilidad",v:ct.movilidad,e:"🧘",c:"#FF9500"},
+    {l:"Pico hormonal 2",v:ct.pico2,e:"🔁",c:"#34C759"},
+    {l:"Dormir",v:ct.dormir,e:"😴",c:"#AF52DE"},
+  ];
+  items.forEach(item => {
+    html += `<div class="cron-cell">
+      <div style="font-size:11px;color:#8E8E93">${item.e} ${item.l}</div>
+      <div style="font-size:14px;font-weight:700;color:${item.c};margin-top:4px">${item.v}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  const ciencia = [
+    {t:"🧬 Cortisol y Testosterona",b:"El cortisol pica 30–60 min tras despertar (CAR response). El entrenamiento de fuerza en tarde aprovecha el pico anabólico de testosterona para mayor síntesis muscular.",c:"#FF3B30"},
+    {t:"🌡️ Temperatura y Rendimiento",b:"La temperatura corporal máxima ocurre entre las 16:00–20:00. Fuerza, VO2max y velocidad de reacción son óptimos. El HIIT en esta franja puede mejorar el rendimiento hasta un 8%.",c:"#FF9500"},
+    {t:"💤 Melatonina y Sueño",b:"La melatonina sube 2h antes de dormir. HIIT nocturno intenso la suprime y fragmenta el sueño. LISS en Zona 1 no tiene este efecto negativo.",c:"#AF52DE"},
+    {t:"⚡ Sensibilidad a la Insulina",b:"Máxima por la mañana. Los carbos matutinos se procesan con mayor eficiencia. Por la noche prioriza proteína y grasas saludables sobre carbohidratos.",c:"#34C759"},
+  ];
+  ciencia.forEach(card => {
+    html += `<div class="card card-left" style="border-color:${card.c};margin-bottom:10px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">${card.t}</div>
+      <div style="font-size:12px;color:#8E8E93;line-height:1.6">${card.b}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+function renderNutricion() {
+  let html = `<div style="padding:12px 16px 0">`;
+  NUTRICION.forEach(card => {
+    html += `<div class="card card-left" style="border-color:${card.c}">
+      <div style="margin-bottom:10px">
+        <div style="font-size:15px;font-weight:700">${card.t}</div>
+        <div style="font-size:12px;color:#8E8E93;margin-top:2px">${card.sub}</div>
+      </div>`;
+    card.items.forEach(item => {
+      html += `<div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-start">
+        <div class="nut-dot" style="background:${card.c};margin-top:5px"></div>
+        <span style="font-size:13px;color:#E5E5EA;line-height:1.5">${item}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────
+function switchTab(t) {
+  state.tab = t; state.dia = null;
+  renderHeader(); renderTabBar(); render();
+  document.getElementById('content').scrollTop = 0;
+}
+function selectSemana(n) { state.semana = n; state.dia = null; render(); }
+function selectDia(i) { state.dia = i; renderHeader(); render(); document.getElementById('content').scrollTop = 0; }
+function goBack() { state.dia = null; renderHeader(); render(); }
+function selectCronotipo(c) { state.cronotipo = c; render(); }
+
+function render() {
+  if (state.tab === 'programa') renderPrograma();
+  else if (state.tab === 'circadiano') renderCircadiano();
+  else renderNutricion();
+}
+
+// ─── CLOCK ────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+setInterval(updateClock, 10000);
+updateClock();
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
